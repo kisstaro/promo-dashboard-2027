@@ -1233,11 +1233,9 @@ async function attemptLogin(emp, dob, fromSession){
     const set = await fetchCredentialSet();
     const key = normalizeDigits(emp)+'|'+normalizeDigits(dob);
     if(set.has(key)){
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({emp:normalizeDigits(emp), dob:normalizeDigits(dob)}));
       showNoticeScreen();
     } else {
-      localStorage.removeItem(AUTH_STORAGE_KEY);
-      showLoginScreen(fromSession ? '' : '정보가 올바르지 않습니다');
+      showLoginScreen('정보가 올바르지 않습니다');
     }
   } catch(err){
     showLoginScreen('명단을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
@@ -1252,7 +1250,6 @@ document.getElementById('noticeConfirmBtn').onclick = ()=>{
 };
 
 document.getElementById('logoutBtn').onclick = ()=>{
-  localStorage.removeItem(AUTH_STORAGE_KEY);
   document.getElementById('loginId').value = '';
   document.getElementById('loginDob').value = '';
   showLoginScreen('');
@@ -1273,16 +1270,7 @@ document.getElementById('loginBtn').onclick = ()=>{
   });
 });
 
-(function initAuth(){
-  const saved = localStorage.getItem(AUTH_STORAGE_KEY);
-  if(saved){
-    try{
-      const parsed = JSON.parse(saved);
-      if(parsed && parsed.emp && parsed.dob){ attemptLogin(parsed.emp, parsed.dob, true); return; }
-    } catch(e){}
-  }
-  showLoginScreen('');
-})();
+showLoginScreen('');
 </script>
 </body>
 </html>
