@@ -261,6 +261,14 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   }
   .login-card h1{ font-size:20px; margin:0 0 6px 0; }
   .login-card .login-sub{ color:var(--muted); font-size:13px; margin-bottom:22px; }
+  .staff-access-btn{
+    position:fixed; right:14px; bottom:10px; z-index:50;
+    background:none; border:none; cursor:pointer;
+    font-size:16px; color:var(--muted); opacity:.65;
+    padding:4px 6px; font-family:inherit;
+    transition:opacity .2s ease;
+  }
+  .staff-access-btn:hover{ opacity:1; }
   .login-field{ text-align:left; margin-bottom:14px; }
   .login-field label{ display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
   .login-field input{
@@ -351,6 +359,32 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <div id="loginError"></div>
     <div id="loginLoading" style="display:none;">확인 중...</div>
     <div class="login-foot">등록된 사번/생년월일이 없으면 입장할 수 없습니다.<br>문의: 영업관리팀 이승진 대리(02-2075-1082)</div>
+  </div>
+  <button type="button" id="staffAccessBtn" class="staff-access-btn">🔒 Access</button>
+</div>
+
+<div id="staffGate" class="login-wrap" style="display:none;">
+  <div class="login-card">
+    <h1>Access</h1>
+    <div class="login-sub">비밀번호를 입력하세요</div>
+    <div class="login-field">
+      <input type="password" id="staffPwInput" placeholder="비밀번호" autocomplete="off">
+    </div>
+    <button id="staffPwBtn">확인</button>
+    <div id="staffPwError" style="color:#ff6b6b; font-size:13px; margin-top:8px;"></div>
+    <div class="login-foot"><a href="#" id="staffBackLink" style="color:var(--muted);">← 돌아가기</a></div>
+  </div>
+</div>
+
+<div id="staffContent" class="login-wrap" style="display:none; align-items:flex-start;">
+  <div class="panel" style="max-width:900px; width:100%; margin:40px auto;">
+    <div class="row" style="margin-bottom:12px;">
+      <h2 style="margin:0;">스태프 순위</h2>
+      <a href="#" id="staffExitLink" style="margin-left:auto; color:var(--muted); font-size:13px;">← 로그인 화면으로</a>
+    </div>
+    <div id="staffTableWrap">
+      <div style="color:var(--muted); padding:20px;">데이터 준비 중입니다.</div>
+    </div>
   </div>
 </div>
 
@@ -648,6 +682,97 @@ function showPage(p){
 
 // ---------- exclusion page (soft password gate) ----------
 const EXCL_PASSWORD = '0813';
+
+// ---------- 스태프 순위 (숨김 접근) ----------
+document.getElementById('staffAccessBtn').onclick = ()=>{
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('staffGate').style.display = 'flex';
+};
+document.getElementById('staffBackLink').onclick = (e)=>{
+  e.preventDefault();
+  document.getElementById('staffGate').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+};
+document.getElementById('staffExitLink').onclick = (e)=>{
+  e.preventDefault();
+  document.getElementById('staffContent').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+};
+document.getElementById('staffPwBtn').onclick = tryUnlockStaff;
+document.getElementById('staffPwInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryUnlockStaff(); });
+function tryUnlockStaff(){
+  const val = document.getElementById('staffPwInput').value;
+  if(val === EXCL_PASSWORD){
+    document.getElementById('staffGate').style.display = 'none';
+    document.getElementById('staffContent').style.display = 'flex';
+    document.getElementById('staffPwInput').value = '';
+    document.getElementById('staffPwError').textContent = '';
+    if(typeof renderStaffTable === 'function') renderStaffTable();
+  } else {
+    document.getElementById('staffPwError').textContent = '비밀번호가 올바르지 않습니다.';
+  }
+}
+
+const STAFF_EXCLUDED = [{"id": "10013787", "name": "정미영", "hq": "서울남부사업본부", "title": "CP사업국장", "reason": "25년 S4이상 승급"}]; // 스태프 순위 데이터 자체엔 없는 사람 기록용 (나머지 제외자는 STAFF_DATA의 note/reason 필드 참고)
+const STAFF_DATA = [{"id": "10005182", "name": "구자옥", "hq": "강원사업본부", "title": "육성국장", "score25": 938.75, "monthly": {"1": 39, "2": 101, "3": 94.5, "4": 88.75, "5": 45, "6": 21.875, "7": 81.875, "8": 23.75, "9": 32.5, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10008837", "name": "하영란", "hq": "강원사업본부", "title": "사업국장", "score25": 1005.005, "monthly": {"1": 75, "2": 93.75, "3": 43.125, "4": 86.875, "5": 50.625, "6": 23.75, "7": 85.625, "8": 31.25, "9": 45.63, "10": 0, "11": 0, "12": 0}, "note": "제외", "reason": "26년 승급"}, {"id": "10017470", "name": "임효숙", "hq": "강원사업본부", "title": "운영팀장", "score25": 973.75, "monthly": {"1": 39, "2": 94.5, "3": 94.5, "4": 83.125, "5": 41.25, "6": 31.25, "7": 76.25, "8": 18.125, "9": 26.88, "10": 0, "11": 0, "12": 0}, "note": "제외", "reason": "26년 승급"}, {"id": "10006452", "name": "신용선", "hq": "강원사업본부", "title": "전략국장", "score25": 896.25, "monthly": {"1": 39, "2": 101, "3": 94.5, "4": 85, "5": 39.375, "6": 14.375, "7": 74.375, "8": 21.875, "9": 41.88, "10": 0, "11": 0, "12": 0}, "note": "제외", "reason": "26년 승급"}, {"id": "10009368", "name": "유은정", "hq": "경기남부사업본부", "title": "사업국장", "score25": 771.25, "monthly": {"1": 83.75, "2": 58.13, "3": 93.75, "4": 27.5, "5": 48.75, "6": 33.125, "7": 33.75, "8": 36.25, "9": 100, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10004033", "name": "김성희", "hq": "경기남부사업본부", "title": "육성국장", "score25": 729.25, "monthly": {"1": 77.5, "2": 44, "3": 66, "4": 21.875, "5": 46.875, "6": 23.75, "7": 45, "8": 32.5, "9": 96.25, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10014318", "name": "김보배", "hq": "경기남부사업본부", "title": "운영팀장", "score25": 775.5, "monthly": {"1": 77.5, "2": 44, "3": 66, "4": 20, "5": 43.125, "6": 25.625, "7": 39.375, "8": 25, "9": 83.13, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10005991", "name": "홍지영", "hq": "경기남부사업본부", "title": "전략국장", "score25": 769.25, "monthly": {"1": 77.5, "2": 44, "3": 66, "4": 16.25, "5": 39.375, "6": 21.875, "7": 30, "8": 30.625, "9": 96.25, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10002588", "name": "이은경", "hq": "경기동부사업본부", "title": "육성국장", "score25": 510.7675, "monthly": {"1": 88, "2": 43.5, "3": 10.5, "4": 26.875, "5": 50, "6": 86.875, "7": 27.5, "8": 53.75, "9": 26.88, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10013246", "name": "김유수", "hq": "경기동부사업본부", "title": "운영팀장", "score25": 552.5, "monthly": {"1": 88, "2": 10.5, "3": 10.5, "4": 36.25, "5": 65, "6": 96.25, "7": 23.75, "8": 53.75, "9": 34.38, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10006061", "name": "박샤론", "hq": "경기동부사업본부", "title": "전략국장", "score25": 503.75, "monthly": {"1": 88, "2": 43.5, "3": 10.5, "4": 30.625, "5": 48.125, "6": 92.5, "7": 16.25, "8": 48.125, "9": 26.88, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10005834", "name": "이경은", "hq": "경기동부사업본부", "title": "사업국장", "score25": 487.89250000000004, "monthly": {"1": 61.6, "2": 74.0495, "3": 20.22, "4": 26.875, "5": 44.375, "6": 85, "7": 18.125, "8": 44.375, "9": 30.63, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10006505", "name": "정나영", "hq": "경기북부사업본부", "title": "육성국장", "score25": 828.75, "monthly": {"1": 21.5, "2": 21, "3": 50.5, "4": 41.25, "5": 20, "6": 67.5, "7": 94.375, "8": 25.625, "9": 12.5, "10": 0, "11": 0, "12": 0}, "note": "제외", "reason": "25년 S4이상 승급"}, {"id": "10007293", "name": "최현정", "hq": "경기북부사업본부", "title": "사업국장", "score25": 797.5, "monthly": {"1": 21.5, "2": 50.5, "3": 50.5, "4": 39.375, "5": 20, "6": 73.125, "7": 92.5, "8": 25.625, "9": 21.88, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10006404", "name": "권영", "hq": "경기북부사업본부", "title": "전략국장", "score25": 685.1173, "monthly": {"1": 13.8, "2": 2.1584, "3": 43.04, "4": 63.95, "5": 64.59, "6": 39.23, "7": 74.53, "8": 85, "9": 38.89, "10": 0, "11": 0, "12": 0}, "note": "제외", "reason": "26년 승급 (S2)"}, {"id": "10006363", "name": "한선희", "hq": "경기인천사업본부", "title": "전략국장", "score25": 773.75, "monthly": {"1": 46.5, "2": 96.5, "3": 82, "4": 60.625, "5": 56.875, "6": 35.625, "7": 50, "8": 66.25, "9": 69.38, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10008253", "name": "김지영", "hq": "경기인천사업본부", "title": "육성국장", "score25": 625.3198, "monthly": {"1": 46.5, "2": 96.5, "3": 82, "4": 56.875, "5": 53.125, "6": 45, "7": 48.125, "8": 60.625, "9": 69.38, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10005017", "name": "송경아", "hq": "경기인천사업본부", "title": "운영팀장", "score25": 798.75, "monthly": {"1": 46.5, "2": 96.5, "3": 82, "4": 64.375, "5": 51.25, "6": 31.875, "7": 48.125, "8": 58.75, "9": 71.25, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10009558", "name": "윤수정", "hq": "경남사업본부", "title": "전략국장", "score25": 737.75, "monthly": {"1": 91, "2": 81, "3": 64, "4": 80.625, "5": 92.5, "6": 89.375, "7": 73.125, "8": 86.875, "9": 70, "10": 0, "11": 0, "12": 0}, "note": "제외", "reason": "25년 S4이상 승급"}, {"id": "10016476", "name": "차유진", "hq": "경남사업본부", "title": "운영팀장", "score25": 592.75, "monthly": {"1": 91, "2": 64, "3": 64, "4": 73.125, "5": 94.375, "6": 81.875, "7": 76.875, "8": 96.25, "9": 60.63, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10009560", "name": "김영아", "hq": "경남사업본부", "title": "육성국장", "score25": 661.1868, "monthly": {"1": 91, "2": 81, "3": 64, "4": 76.875, "5": 90.625, "6": 80, "7": 65.625, "8": 86.875, "9": 55, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10004327", "name": "이경미", "hq": "경남사업본부", "title": "사업국장", "score25": 837.5, "monthly": {"1": 70.625, "2": 73.13, "3": 76.25, "4": 73.125, "5": 75.625, "6": 83.75, "7": 71.25, "8": 85, "9": 64.38, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10000049", "name": "김순용", "hq": "경북사업본부", "title": "육성국장", "score25": 734, "monthly": {"1": 60, "2": 28, "3": 55.5, "4": 63.125, "5": 40, "6": 43.75, "7": 91.25, "8": 48.75, "9": 54.38, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10004542", "name": "한승희", "hq": "경북사업본부", "title": "사업국장", "score25": 827.51, "monthly": {"1": 94.375, "2": 29.38, "3": 58.75, "4": 38.75, "5": 43.75, "6": 34.375, "7": 76.25, "8": 54.375, "9": 41.25, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10006441", "name": "하지윤", "hq": "경북사업본부", "title": "전략국장", "score25": 637.75, "monthly": {"1": 60, "2": 28, "3": 55.5, "4": 53.75, "5": 36.25, "6": 32.5, "7": 81.875, "8": 43.125, "9": 43.13, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10008859", "name": "박희주", "hq": "경북사업본부", "title": "운영팀장", "score25": 637.75, "monthly": {"1": 60, "2": 55.5, "3": 55.5, "4": 0, "5": 0, "6": 32.5, "7": 80, "8": 37.5, "9": 43.13, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10006293", "name": "장수은", "hq": "경상사업본부", "title": "전략국장", "score25": 652.38, "monthly": {"1": 47.5, "2": 61.5, "3": 73, "4": 55.625, "5": 85.625, "6": 23.125, "7": 61.25, "8": 76.875, "9": 71.25, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10016818", "name": "이은규", "hq": "경상사업본부", "title": "운영팀장", "score25": 610.7172, "monthly": {"1": 47.5, "2": 73, "3": 73, "4": 46.25, "5": 85.625, "6": 28.75, "7": 55.625, "8": 63.75, "9": 67.5, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10030444", "name": "김소연", "hq": "경상사업본부", "title": "육성국장", "score25": 574.0351, "monthly": {"1": 33.75, "2": 57.5, "3": 73, "4": 55.625, "5": 80, "6": 38.125, "7": 55.625, "8": 78.75, "9": 76.88, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10003225", "name": "박래성", "hq": "대전사업본부", "title": "사업국장", "score25": 570.453, "monthly": {"1": 85.625, "2": 85, "3": 87.5, "4": 39.375, "5": 96.25, "6": 83.125, "7": 86.875, "8": 55.625, "9": 98.13, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10014330", "name": "현정화", "hq": "대전사업본부", "title": "전략국장", "score25": 658, "monthly": {"1": 26.5, "2": 58.5, "3": 86.5, "4": 39.375, "5": 100, "6": 96.25, "7": 88.75, "8": 57.5, "9": 98.13, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10008260", "name": "최윤정", "hq": "대전사업본부", "title": "육성국장", "score25": 740.9434, "monthly": {"1": 23.1584, "2": 52.4, "3": 86.5, "4": 41.25, "5": 94.375, "6": 92.5, "7": 92.5, "8": 48.125, "9": 92.5, "10": 0, "11": 0, "12": 0}, "note": "제외", "reason": "26년 승급 (S4)"}, {"id": "10003521", "name": "강구원", "hq": "대전사업본부", "title": "운영팀장", "score25": 713.1286, "monthly": {"1": 26.5, "2": 58.5, "3": 86.5, "4": 41.25, "5": 77.5, "6": 75.625, "7": 85, "8": 51.875, "9": 92.5, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10009481", "name": "이성은", "hq": "부산사업본부", "title": "운영팀장", "score25": 476.75, "monthly": {"1": 20.5, "2": 103, "3": 103, "4": 92.5, "5": 67.5, "6": 62.5, "7": 36.25, "8": 78.75, "9": 59.38, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10003879", "name": "고홍이", "hq": "부산사업본부", "title": "전략국장", "score25": 586.75, "monthly": {"1": 20.5, "2": 78.5, "3": 103, "4": 98.125, "5": 71.25, "6": 66.25, "7": 36.25, "8": 73.125, "9": 44.38, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10010746", "name": "임현희", "hq": "부산사업본부", "title": "육성국장", "score25": 574.25, "monthly": {"1": 20.5, "2": 78.5, "3": 103, "4": 96.25, "5": 75, "6": 53.75, "7": 32.5, "8": 69.375, "9": 50, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10016708", "name": "오혜민", "hq": "서울남부사업본부", "title": "운영팀장", "score25": 502.75, "monthly": {"1": 46, "2": 23, "3": 31.5, "4": 32.5, "5": 32.5, "6": 50, "7": 23.75, "8": 53.125, "9": 48.13, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10016194", "name": "조유나", "hq": "서울남부사업본부", "title": "전략국장", "score25": 501.5, "monthly": {"1": 46, "2": 23, "3": 31.5, "4": 23.125, "5": 26.875, "6": 55.625, "7": 21.875, "8": 60.625, "9": 48.13, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10016183", "name": "김찬임", "hq": "서울남부사업본부", "title": "육성국장", "score25": 474, "monthly": {"1": 46, "2": 23, "3": 31.5, "4": 30.625, "5": 30.625, "6": 46.25, "7": 21.875, "8": 56.875, "9": 51.88, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10005995", "name": "이희숙", "hq": "서울북부사업본부", "title": "전략국장", "score25": 584, "monthly": {"1": 65, "2": 66.5, "3": 30, "4": 68.125, "5": 14.375, "6": 39.375, "7": 39.375, "8": 96.25, "9": 35.63, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10008538", "name": "이명훈", "hq": "서울북부사업본부", "title": "운영팀장", "score25": 529, "monthly": {"1": 65, "2": 30, "3": 30, "4": 53.125, "5": 20, "6": 33.75, "7": 31.875, "8": 86.875, "9": 39.38, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10004026", "name": "임탁균", "hq": "서울북부사업본부", "title": "사업국장", "score25": 322.11389999999994, "monthly": {"1": 23.75, "2": 18.75, "3": 21.875, "4": 64.375, "5": 18.125, "6": 37.5, "7": 35.625, "8": 83.125, "9": 37.5, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10004984", "name": "김인영", "hq": "전남사업본부", "title": "육성국장", "score25": 687, "monthly": {"1": 55, "2": 65.5, "3": 26.5, "4": 76.25, "5": 78.125, "6": 60.625, "7": 58.75, "8": 83.75, "9": 85.63, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10008593", "name": "황정현", "hq": "전남사업본부", "title": "전략국장", "score25": 737, "monthly": {"1": 55, "2": 65.5, "3": 26.5, "4": 68.75, "5": 85.625, "6": 44.375, "7": 68.125, "8": 76.25, "9": 87.5, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10004405", "name": "박진애", "hq": "전남사업본부", "title": "운영팀장", "score25": 713.25, "monthly": {"1": 55, "2": 65.5, "3": 26.5, "4": 76.25, "5": 74.375, "6": 46.25, "7": 53.125, "8": 74.375, "9": 76.25, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10005890", "name": "오용광", "hq": "전남사업본부", "title": "사업국장", "score25": 579.1336, "monthly": {"1": 48.75, "2": 38.13, "3": 23.75, "4": 83.75, "5": 83.75, "6": 48.125, "7": 64.375, "8": 66.875, "9": 70.63, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10016318", "name": "김승용", "hq": "전북사업본부", "title": "운영팀장", "score25": 316.25, "monthly": {"1": 95, "2": 28, "3": 31, "4": 78.75, "5": 59.375, "6": 66.25, "7": 73.125, "8": 87.5, "9": 89.38, "10": 0, "11": 0, "12": 0}, "note": "제외", "reason": "휴직 기간"}, {"id": "10006405", "name": "우영화", "hq": "전북사업본부", "title": "육성국장", "score25": 866.4167, "monthly": {"1": 95, "2": 28, "3": 31, "4": 75, "5": 59.375, "6": 68.125, "7": 75, "8": 85.625, "9": 83.75, "10": 0, "11": 0, "12": 0}, "note": "제외", "reason": "26년 승급"}, {"id": "10004794", "name": "허봉덕", "hq": "전북사업본부", "title": "전략국장", "score25": 793.3905, "monthly": {"1": 58.6, "2": 28, "3": 31, "4": 75, "5": 51.875, "6": 60.625, "7": 73.125, "8": 78.125, "9": 78.13, "10": 0, "11": 0, "12": 0}, "note": "제외", "reason": "25년 S2 승급"}, {"id": "10007078", "name": "이동연", "hq": "제주사업본부", "title": "육성국장", "score25": 395.3441, "monthly": {"1": 48.6, "2": 9.8911, "3": 50.12, "4": 36.875, "5": 61.875, "6": 72.5, "7": 58.75, "8": 26.875, "9": 25.63, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10009074", "name": "이민경", "hq": "제주사업본부", "title": "전략국장", "score25": 632.9339000000001, "monthly": {"1": 47.5, "2": 27.5, "3": 17.5, "4": 20, "5": 65.625, "6": 83.75, "7": 58.75, "8": 23.125, "9": 12.5, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10003638", "name": "최유리", "hq": "충청사업본부", "title": "육성국장", "score25": 725, "monthly": {"1": 92.5, "2": 82, "3": 60.5, "4": 89.375, "5": 68.125, "6": 78.75, "7": 45.625, "8": 50.625, "9": 73.75, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10016171", "name": "정경선", "hq": "충청사업본부", "title": "운영팀장", "score25": 508.7376, "monthly": {"1": 92.5, "2": 82, "3": 60.5, "4": 91.25, "5": 71.875, "6": 82.5, "7": 34.375, "8": 52.5, "9": 64.38, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10003237", "name": "김노아", "hq": "충청사업본부", "title": "전략국장", "score25": 606.25, "monthly": {"1": 92.5, "2": 82, "3": 60.5, "4": 83.75, "5": 66.25, "6": 76.875, "7": 32.5, "8": 35.625, "9": 64.38, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}, {"id": "10004678", "name": "이영석", "hq": "충청사업본부", "title": "사업국장", "score25": 484.0994, "monthly": {"1": 32.5, "2": 14.38, "3": 46.875, "4": 76.25, "5": 60.625, "6": 71.25, "7": 23.125, "8": 30, "9": 49.38, "10": 0, "11": 0, "12": 0}, "note": null, "reason": ""}];
+
+const STAFF_DIRECTOR_TITLES = ['전략국장','육성국장','사업국장'];
+let staffDirFilter = 'all';
+function computeStaffScore(p){
+  const monthlySum = Object.values(p.monthly || {}).reduce((a,b)=> a + (Number(b)||0), 0);
+  return (p.score25||0)*0.8*0.4 + monthlySum*0.8*0.6;
+}
+function renderStaffTable(){
+  const wrap = document.getElementById('staffTableWrap');
+  const srcList = (state.data.staff && state.data.staff.length) ? state.data.staff : STAFF_DATA;
+
+  const directors = srcList.filter(p=> STAFF_DIRECTOR_TITLES.includes(p.title))
+    .map(p=> Object.assign({}, p, {score: computeStaffScore(p)}))
+    .sort((a,b)=> b.score - a.score);
+  directors.forEach((p,i)=>{ p.rank = i+1; });
+
+  const teamleads = srcList.filter(p=> p.title==='운영팀장')
+    .map(p=> Object.assign({}, p, {score: computeStaffScore(p)}))
+    .sort((a,b)=> b.score - a.score);
+  teamleads.forEach((p,i)=>{ p.rank = i+1; });
+
+  function statusCell(p){
+    return p.note==='제외' ? `<span class="badge bexcl" title="${p.reason||''}">승급 비대상</span>` : '';
+  }
+  function buildTable(list){
+    let rows = '';
+    list.forEach(p=>{
+      rows += '<tr><td style="text-align:center;">' + p.rank + '</td><td>' + p.hq + '</td><td>' + p.title + '</td><td>' + p.name + '</td><td style="text-align:right;">' + p.score.toFixed(2) + '</td><td style="text-align:center;">' + statusCell(p) + '</td></tr>';
+    });
+    return '<div class="table-wrap" style="max-height:none;"><table><thead><tr><th style="text-align:center;">순위</th><th>사업본부</th><th>직책</th><th>성명</th><th style="text-align:right;">점수</th><th style="text-align:center;">상태</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  }
+
+  const filteredDirectors = staffDirFilter==='all' ? directors : directors.filter(p=> p.title===staffDirFilter);
+  const filterOptions = ['all'].concat(STAFF_DIRECTOR_TITLES);
+  const filterHtml = '<div style="margin-bottom:10px;">' +
+    '<label for="staffDirFilterSel" style="font-size:13px; color:var(--muted); margin-right:8px;">직책 필터:</label>' +
+    '<select id="staffDirFilterSel">' +
+      filterOptions.map(t=> `<option value="${t}" ${t===staffDirFilter?'selected':''}>${t==='all'?'전체':t}</option>`).join('') +
+    '</select>' +
+  '</div>';
+
+  wrap.innerHTML =
+    '<div style="margin-bottom:24px;">' +
+      '<h3 style="margin:0 0 8px;">국장급 (전략국장·육성국장·사업국장)</h3>' +
+      filterHtml +
+      buildTable(filteredDirectors) +
+    '</div>' +
+    '<div>' +
+      '<h3 style="margin:0 0 8px;">팀장급 (운영팀장)</h3>' +
+      buildTable(teamleads) +
+    '</div>';
+
+  document.getElementById('staffDirFilterSel').onchange = (e)=>{
+    staffDirFilter = e.target.value;
+    renderStaffTable();
+  };
+}
+
 document.getElementById('exclPwBtn').onclick = tryUnlockExcl;
 document.getElementById('exclPwInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryUnlockExcl(); });
 function tryUnlockExcl(){
@@ -664,6 +789,8 @@ function renderExclTable(){
   const rows = [];
   BASELINE.jigu.filter(p=>p.note==='제외').forEach(p=> rows.push({role:'지국장', id:p.id, name:p.name, hq:p.hq, org:p.orgName, reason:p.reason}));
   BASELINE.team.filter(p=>p.note==='제외').forEach(p=> rows.push({role:'팀장', id:p.id, name:p.name, hq:p.hq, org:(p.jiguName+' · '+p.teamName), reason:p.reason}));
+  (state.data.staff || STAFF_DATA).filter(p=>p.note==='제외').forEach(p=> rows.push({role:'스태프', id:p.id, name:p.name, hq:p.hq, org:p.title, reason:p.reason}));
+  (typeof STAFF_EXCLUDED !== 'undefined' ? STAFF_EXCLUDED : []).forEach(p=> rows.push({role:'스태프', id:p.id, name:p.name, hq:p.hq, org:p.title, reason:p.reason})); // 순위 데이터 자체가 없는 사람(예: 정미영) 기록용
   rows.sort((a,b)=> a.role.localeCompare(b.role) || String(a.name).localeCompare(String(b.name)));
   const body = document.getElementById('exclTableBody');
   body.innerHTML = rows.map(r=>`<tr><td>${r.role}</td><td>${r.id}</td><td class="name-cell">${r.name}</td><td>${r.hq}</td><td>${r.org}</td><td>${r.reason||''}</td></tr>`).join('');
@@ -699,8 +826,9 @@ let state = {
 function cloneBaseline(){
   state.data.jigu = JSON.parse(JSON.stringify(BASELINE.jigu));
   state.data.team = JSON.parse(JSON.stringify(BASELINE.team));
-  state.monthsLoaded = {jigu:{}, team:{}};
-  for(let m=1;m<=9;m++){ state.monthsLoaded.jigu[m]=true; state.monthsLoaded.team[m]=true; }
+  state.data.staff = JSON.parse(JSON.stringify(STAFF_DATA));
+  state.monthsLoaded = {jigu:{}, team:{}, staff:{}};
+  for(let m=1;m<=9;m++){ state.monthsLoaded.jigu[m]=true; state.monthsLoaded.team[m]=true; state.monthsLoaded.staff[m]=true; }
 }
 cloneBaseline();
 
@@ -757,7 +885,7 @@ function renderStats(meta){
   const g = document.getElementById('statGrid');
   g.innerHTML = `
     <div class="stat"><div class="label">전체 인원</div><div class="value">${meta.N}명</div></div>
-    <div class="stat"><div class="label">제외 인원</div><div class="value">${meta.exclCount}명</div><div class="sub2">승급 제외 년도/임금피크/근속 미달 등</div></div>
+    <div class="stat"><div class="label">제외 인원</div><div class="value">${meta.exclCount}명</div><div class="sub2">승급 비대상 년도/임금피크/근속 미달 등</div></div>
     <div class="stat"><div class="label">대상 인원(경쟁)</div><div class="value">${meta.eligibleCount}명</div></div>
     <div class="stat tier6"><div class="label">6% 커트라인</div><div class="value">${meta.cut[6]}명</div><div class="sub2">${cutoffScoreText(6)}</div></div>
     <div class="stat tier7"><div class="label">7% 커트라인</div><div class="value">${meta.cut[7]}명</div><div class="sub2">${cutoffScoreText(7)}</div></div>
@@ -813,12 +941,12 @@ function renderFilters(meta){
 }
 
 function tierBadge(p){
-  if(p.note==='제외') return `<span class="badge bexcl" title="${p.reason||''}">승급 제외</span>`;
+  if(p.note==='제외') return `<span class="badge bexcl" title="${p.reason||''}">승급 비대상</span>`;
   if(p.tier) return `<span class="badge b${p.tier}">${p.tier}% 승급권</span>`;
   return `<span class="badge bnone">승급권 밖</span>`;
 }
 function tierBadgeText(p){
-  if(p.note==='제외') return '승급 제외';
+  if(p.note==='제외') return '승급 비대상';
   if(p.tier) return p.tier+'% 승급권';
   return '승급권 밖';
 }
@@ -1151,12 +1279,13 @@ function handleFile(file){
       if(parsed.detectedMonth) monthSelect.value = String(parsed.detectedMonth);
       const jiguN = Object.keys(parsed.jigu).length;
       const teamN = Object.keys(parsed.team).length;
-      let msg = `읽기 완료: 지국장 ${jiguN}명, 팀장 ${teamN}명 점수 인식됨.`;
+      const hqN = Object.keys(parsed.hq).length;
+      let msg = `읽기 완료: 지국장 ${jiguN}명, 팀장 ${teamN}명, 사업본부 ${hqN}개 점수 인식됨(스태프 점수는 사업본부 점수로 반영).`;
       if(parsed.detectedMonth) msg += ` (파일에서 ${parsed.detectedMonth}월로 추정, 필요시 위 드롭다운에서 수정하세요)`;
       else msg += ' 월이 자동 인식되지 않았습니다. 위 드롭다운에서 대상 월을 직접 선택하세요.';
-      if(jiguN===0 && teamN===0) msg += '\n⚠ 인식된 데이터가 없습니다. 파일 형식을 확인해주세요 (지국장/팀장, 총점 컬럼이 있는 시트 필요).';
+      if(jiguN===0 && teamN===0 && hqN===0) msg += '\n⚠ 인식된 데이터가 없습니다. 파일 형식을 확인해주세요 (지국장/팀장/사업본부명, 총점 컬럼이 있는 시트 필요).';
       statusBox.textContent = msg;
-      applyBtn.disabled = (jiguN===0 && teamN===0);
+      applyBtn.disabled = (jiguN===0 && teamN===0 && hqN===0);
     }catch(err){
       statusBox.textContent = '파일을 읽는 중 오류가 발생했습니다: ' + err.message;
     }
@@ -1191,15 +1320,30 @@ dropZone.addEventListener('drop', (e)=>{
 });
 
 function parseWorkbook(wb, filename){
-  const result = {jigu:{}, team:{}, detectedMonth:null};
+  const result = {jigu:{}, team:{}, hq:{}, detectedMonth:null};
   // try detect month from filename first
   let m = filename.match(/20\d{2}[.\-\s]?(\d{1,2})\s*월/) || filename.match(/20\d{2}\.(\d{1,2})/);
   if(m) result.detectedMonth = parseInt(m[1]);
 
+  function maybeDetectMonth(rows, headerRowIdx){
+    if(result.detectedMonth) return;
+    for(let r=0;r<headerRowIdx;r++){
+      const row = rows[r]||[];
+      for(const cell of row){
+        if(typeof cell==='string'){
+          const mm = cell.match(/20\d{2}\.(\d{1,2})/);
+          if(mm){ result.detectedMonth = parseInt(mm[1]); break; }
+        }
+      }
+      if(result.detectedMonth) break;
+    }
+  }
+
   wb.SheetNames.forEach(sn=>{
     const ws = wb.Sheets[sn];
     const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null, raw:true});
-    // find header row: contains '총점' and ('지국장' or '팀장') as exact cell values
+
+    // --- 지국장/팀장 (개인별 총점) 시트 인식 ---
     let headerRowIdx=-1, idColIdx=-1, scoreColIdx=-1, isJigu=false;
     for(let r=0;r<Math.min(rows.length,15);r++){
       const row = rows[r];
@@ -1211,33 +1355,45 @@ function parseWorkbook(wb, filename){
       if(jiguIdx!==-1){ headerRowIdx=r; idColIdx=jiguIdx; scoreColIdx=scoreIdx; isJigu=true; break; }
       if(teamIdx!==-1){ headerRowIdx=r; idColIdx=teamIdx; scoreColIdx=scoreIdx; isJigu=false; break; }
     }
-    if(headerRowIdx===-1) return; // not a relevant sheet (e.g. 사업본부 rollup, 프리드 리스트)
-
-    // month detection from sheet title text (rows above header, any cell)
-    if(!result.detectedMonth){
-      for(let r=0;r<headerRowIdx;r++){
-        const row = rows[r]||[];
-        for(const cell of row){
-          if(typeof cell==='string'){
-            const mm = cell.match(/20\d{2}\.(\d{1,2})/);
-            if(mm){ result.detectedMonth = parseInt(mm[1]); break; }
-          }
-        }
-        if(result.detectedMonth) break;
+    if(headerRowIdx!==-1){
+      maybeDetectMonth(rows, headerRowIdx);
+      const bucket = isJigu ? result.jigu : result.team;
+      for(let r=headerRowIdx+1; r<rows.length; r++){
+        const row = rows[r];
+        if(!row) continue;
+        const idVal = row[idColIdx];
+        if(idVal===null || idVal===undefined || idVal==='') continue;
+        const id = String(idVal).trim();
+        let score = row[scoreColIdx];
+        score = (typeof score==='number') ? score : parseFloat(score);
+        if(isNaN(score)) score = 0;
+        bucket[id] = score; // last sheet wins if duplicate (e.g. combining 1그룹/2그룹, ids don't overlap so fine)
       }
     }
 
-    const bucket = isJigu ? result.jigu : result.team;
-    for(let r=headerRowIdx+1; r<rows.length; r++){
+    // --- 사업본부(전체) (스태프 점수용 — 본부명별 총점) 시트 인식 ---
+    let hqHeaderRowIdx=-1, hqNameColIdx=-1, hqScoreColIdx=-1;
+    for(let r=0;r<Math.min(rows.length,15);r++){
       const row = rows[r];
       if(!row) continue;
-      const idVal = row[idColIdx];
-      if(idVal===null || idVal===undefined || idVal==='') continue;
-      const id = String(idVal).trim();
-      let score = row[scoreColIdx];
-      score = (typeof score==='number') ? score : parseFloat(score);
-      if(isNaN(score)) score = 0;
-      bucket[id] = score; // last sheet wins if duplicate (e.g. combining 1그룹/2그룹, ids don't overlap so fine)
+      const scoreIdx = row.findIndex(c=> c==='총점');
+      if(scoreIdx===-1) continue;
+      const hqIdx = row.findIndex(c=> c==='사업본부명');
+      if(hqIdx!==-1){ hqHeaderRowIdx=r; hqNameColIdx=hqIdx; hqScoreColIdx=scoreIdx; break; }
+    }
+    if(hqHeaderRowIdx!==-1){
+      maybeDetectMonth(rows, hqHeaderRowIdx);
+      for(let r=hqHeaderRowIdx+1; r<rows.length; r++){
+        const row = rows[r];
+        if(!row) continue;
+        const hqVal = row[hqNameColIdx];
+        if(hqVal===null || hqVal===undefined || hqVal==='') continue;
+        const hqName = String(hqVal).trim();
+        let score = row[hqScoreColIdx];
+        score = (typeof score==='number') ? score : parseFloat(score);
+        if(isNaN(score)) score = 0;
+        result.hq[hqName] = score;
+      }
     }
   });
   return result;
@@ -1259,14 +1415,23 @@ applyBtn.addEventListener('click', ()=>{
       teamMatched++;
     }
   });
+  let staffMatched=0;
+  state.data.staff.forEach(p=>{
+    if(state.pendingParsed.hq.hasOwnProperty(p.hq)){
+      p.monthly[String(month)] = state.pendingParsed.hq[p.hq];
+      staffMatched++;
+    }
+  });
   if(jiguMatched>0) state.monthsLoaded.jigu[month]=true;
   if(teamMatched>0) state.monthsLoaded.team[month]=true;
-  statusBox.textContent = `${month}월 데이터 반영 완료: 지국장 ${jiguMatched}명, 팀장 ${teamMatched}명 매칭되어 갱신되었습니다.`;
+  if(staffMatched>0) state.monthsLoaded.staff[month]=true;
+  statusBox.textContent = `${month}월 데이터 반영 완료: 지국장 ${jiguMatched}명, 팀장 ${teamMatched}명, 스태프 ${staffMatched}명(사업본부 점수 기준) 매칭되어 갱신되었습니다.`;
   applyBtn.disabled = true;
   fileInput.value = '';
   state.pendingParsed = null;
   render();
   if(currentView==='goal') renderGoal();
+  if(document.getElementById('staffContent').style.display !== 'none') renderStaffTable();
 });
 
 // ---------- goal calculator (목표 점수 계산기) ----------
@@ -1394,7 +1559,7 @@ function renderGoal(){
 }
 
 function goalTierBadge(p){
-  if(p.note==='제외') return `<span class="badge bexcl" title="${p.reason||''}">승급 제외</span>`;
+  if(p.note==='제외') return `<span class="badge bexcl" title="${p.reason||''}">승급 비대상</span>`;
   if(p.projTier) return `<span class="badge b${p.projTier}">${p.projTier}% 승급권</span>`;
   return `<span class="badge bnone">승급권 밖</span>`;
 }
